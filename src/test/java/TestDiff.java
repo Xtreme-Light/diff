@@ -124,7 +124,7 @@ public class TestDiff {
     }
 
     public List<DiffDetailResult<Person>> compare2(Person person1, Person person2) {
-        DiffDetailResult<Person> build = new ReflectionDiffBuilder<>(person1, person2, Person.class).build();
+        DiffDetailResult<Person> build = new ReflectionDiffBuilder<>("人员信息",person1, person2, Person.class).build();
 //        System.out.println(build.getDiffs());
         for (DiffPair<?> d : build.getDiffs()) {
             System.out.println(d.path() + ": " + d.left() + " != " + d.right());

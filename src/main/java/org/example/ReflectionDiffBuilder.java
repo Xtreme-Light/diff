@@ -1,6 +1,7 @@
 package org.example;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.*;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
@@ -15,28 +16,28 @@ public class ReflectionDiffBuilder<T> {
     private final T right;
     private final DiffDetailBuilder<T> diffBuilder;
 
-    private final String clazzName;
+    private final String documentName;
 
     private final Class<T> clazz;
-
-    private final String path;
 
     public ReflectionDiffBuilder(T lhs, T rhs, final Class<T> clazz) {
         this.left = lhs;
         this.right = rhs;
         this.clazz = clazz;
-        this.clazzName = invokeName(clazz);
-        this.diffBuilder = new DiffDetailBuilder<>(clazzName, lhs, rhs);
-        this.path = null;
+        this.documentName = invokeName(clazz);
+        this.diffBuilder = new DiffDetailBuilder<>(documentName, lhs, rhs);
     }
 
-    public ReflectionDiffBuilder(String path, T lhs, T rhs, final Class<T> clazz) {
+    public ReflectionDiffBuilder(String documentName, T lhs, T rhs, final Class<T> clazz) {
         this.left = lhs;
         this.right = rhs;
         this.clazz = clazz;
-        this.clazzName = invokeName(clazz);
-        this.diffBuilder = new DiffDetailBuilder<>(clazzName, lhs, rhs);
-        this.path = path;
+        if (StringUtils.isNotBlank(documentName)) {
+            this.documentName = documentName;
+        } else {
+            this.documentName = invokeName(clazz);
+        }
+        this.diffBuilder = new DiffDetailBuilder<>(documentName, lhs, rhs);
     }
 
     @SuppressWarnings("unchecked")
@@ -44,19 +45,21 @@ public class ReflectionDiffBuilder<T> {
         this.left = lhs;
         this.right = rhs;
         this.clazz = (Class<T>) lhs.getClass();
-        this.clazzName = invokeName(clazz);
-        this.diffBuilder = new DiffDetailBuilder<>(clazzName, lhs, rhs);
-        this.path = null;
+        this.documentName = invokeName(clazz);
+        this.diffBuilder = new DiffDetailBuilder<>(documentName, lhs, rhs);
     }
 
     @SuppressWarnings("unchecked")
-    public ReflectionDiffBuilder(String path, T lhs, T rhs) {
+    public ReflectionDiffBuilder(String documentName, T lhs, T rhs) {
         this.left = lhs;
         this.right = rhs;
         this.clazz = (Class<T>) lhs.getClass();
-        this.clazzName = invokeName(clazz);
-        this.diffBuilder = new DiffDetailBuilder<>(clazzName, lhs, rhs);
-        this.path = path;
+        if (StringUtils.isNotBlank(documentName)) {
+            this.documentName = documentName;
+        } else {
+            this.documentName = invokeName(clazz);
+        }
+        this.diffBuilder = new DiffDetailBuilder<>(documentName, lhs, rhs);
     }
 
     public DiffDetailResult<T> build() {
@@ -71,7 +74,7 @@ public class ReflectionDiffBuilder<T> {
         for (final Field field : FieldUtils.getAllFields(clazz)) {
             if (accept(field)) {
                 try {
-                    diffBuilder.append(join("-", path, this.clazzName), invokeName(field), FieldUtils.readField(field, left, true), FieldUtils.readField(field, right, true));
+                    diffBuilder.append(join("-", this.documentName, invokeName(field)), FieldUtils.readField(field, left, true), FieldUtils.readField(field, right, true));
                 } catch (final IllegalAccessException e) {
                     // this can't happen. Would get a Security exception instead
                     // throw a runtime exception in case the impossible happens.
@@ -127,6 +130,4 @@ public class ReflectionDiffBuilder<T> {
     }
 
 
-
-    
 }

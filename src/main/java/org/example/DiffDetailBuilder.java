@@ -7,8 +7,13 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.*;
 
-import static org.example.PathUtils.join;
-
+/**
+ * 两个职责
+ * 1. 持有左右对象
+ * 2. 基础类型获取DiffPair
+ * 3. 复杂类型获取新的 DiffDetailBuilder
+ * @param <T> 要比较的类型
+ */
 @Getter
 public class DiffDetailBuilder<T> {
     private final List<DiffPair<?>> diffs;
@@ -33,15 +38,14 @@ public class DiffDetailBuilder<T> {
     /**
      * Test if two {@link Objects}s are equal.
      *
-     * @param fieldName the field name
      * @param lhs       the left-hand {@link Object}
      * @param rhs       the right-hand {@link Object}
      * @return this
      * @throws NullPointerException if field name is {@code null}
      */
-    public DiffDetailBuilder<T> append(final String path, final String fieldName, final Object lhs,
+    public DiffDetailBuilder<T> append(final String path,  final Object lhs,
                                        final Object rhs) {
-        validateFieldNameNotNull(fieldName);
+        validateFieldNameNotNull(path);
 
         if (lhs == rhs) {
             return this;
@@ -53,38 +57,38 @@ public class DiffDetailBuilder<T> {
 
         if (ObjectUtils.isArray(objectToTest)) {
             if (objectToTest instanceof boolean[]) {
-                return append(path, fieldName, (boolean[]) lhs, (boolean[]) rhs);
+                return append(path, (boolean[]) lhs, (boolean[]) rhs);
             }
             if (objectToTest instanceof byte[]) {
-                return append(path, fieldName, (byte[]) lhs, (byte[]) rhs);
+                return append(path, (byte[]) lhs, (byte[]) rhs);
             }
             if (objectToTest instanceof char[]) {
-                return append(path, fieldName, (char[]) lhs, (char[]) rhs);
+                return append(path, (char[]) lhs, (char[]) rhs);
             }
             if (objectToTest instanceof double[]) {
-                return append(path, fieldName, (double[]) lhs, (double[]) rhs);
+                return append(path, (double[]) lhs, (double[]) rhs);
             }
             if (objectToTest instanceof float[]) {
-                return append(path, fieldName, (float[]) lhs, (float[]) rhs);
+                return append(path, (float[]) lhs, (float[]) rhs);
             }
             if (objectToTest instanceof int[]) {
-                return append(path, fieldName, (int[]) lhs, (int[]) rhs);
+                return append(path, (int[]) lhs, (int[]) rhs);
             }
             if (objectToTest instanceof long[]) {
-                return append(path, fieldName, (long[]) lhs, (long[]) rhs);
+                return append(path, (long[]) lhs, (long[]) rhs);
             }
             if (objectToTest instanceof short[]) {
-                return append(path, fieldName, (short[]) lhs, (short[]) rhs);
+                return append(path, (short[]) lhs, (short[]) rhs);
             }
 
-            return append(path, fieldName, (Object[]) lhs, (Object[]) rhs);
+            return append(path, (Object[]) lhs, (Object[]) rhs);
         }
 
         // Not array type
         if (Objects.equals(lhs, rhs)) {
             return this;
         }
-        DiffPair<Object> pair = new DiffPair<>(path + fieldName, lhs, rhs);
+        DiffPair<Object> pair = new DiffPair<>(path, lhs, rhs);
         if (objectToTest instanceof Number || objectToTest instanceof CharSequence) {
             this.diffs.add(pair);
             return this;
@@ -109,7 +113,7 @@ public class DiffDetailBuilder<T> {
                     return this;
                 }
                 for (Object next : right1) {
-                    append(path, fieldName, null, next);
+                    append(path, null, next);
                 }
                 return this;
             } else if (right == null) {
@@ -118,7 +122,7 @@ public class DiffDetailBuilder<T> {
                     return this;
                 }
                 for (Object next : left1) {
-                    append(path, fieldName, next, null);
+                    append(path, next, null);
                 }
                 return this;
             } else {
@@ -133,20 +137,20 @@ public class DiffDetailBuilder<T> {
                         if (Objects.equals(leftArray[i], rightArray[i])) {
                             return this;
                         }
-                        append(path, fieldName, leftArray[i], rightArray[i]);
+                        append(path, leftArray[i], rightArray[i]);
                     }
                     for (; leftSize < rightSize; leftSize++) {
-                        append(path, fieldName, null, rightArray[leftSize]);
+                        append(path, null, rightArray[leftSize]);
                     }
                 } else {
                     for (int i = 0; i < rightSize; i++) {
                         if (Objects.equals(leftArray[i], rightArray[i])) {
                             return this;
                         }
-                        append(path, fieldName, leftArray[i], rightArray[i]);
+                        append(path, leftArray[i], rightArray[i]);
                     }
                     for (; rightSize < leftSize; rightSize++) {
-                        append(path, fieldName, leftArray[rightSize], null);
+                        append(path, leftArray[rightSize], null);
                     }
                 }
                 return this;
@@ -154,95 +158,95 @@ public class DiffDetailBuilder<T> {
         }
 
         // 最后如果是普通对象，应该进一步拆分
-        ReflectionDiffBuilder<?> reflectionDiffBuilder = new ReflectionDiffBuilder<>(join("-", rootName, path,fieldName), lhs, rhs);
+        ReflectionDiffBuilder<?> reflectionDiffBuilder = new ReflectionDiffBuilder<>(path, lhs, rhs);
         reflectionDiffBuilders.add(reflectionDiffBuilder);
         return this;
     }
 
-    public DiffDetailBuilder<T> append(final String path, final String fieldName, final boolean[] lhs,
+    public DiffDetailBuilder<T> append(final String path,  final boolean[] lhs,
                                        final boolean[] rhs) {
-        validateFieldNameNotNull(fieldName);
+        validateFieldNameNotNull(path);
         if (!Arrays.equals(lhs, rhs)) {
-            diffs.add(new DiffPair<>(join("-", rootName, path,fieldName), ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
+            diffs.add(new DiffPair<>(path, ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
         }
         return this;
     }
 
-    public DiffDetailBuilder<T> append(final String path, final String fieldName, final byte[] lhs,
+    public DiffDetailBuilder<T> append(final String path,  final byte[] lhs,
                                        final byte[] rhs) {
-        validateFieldNameNotNull(fieldName);
+        validateFieldNameNotNull(path);
         if (!Arrays.equals(lhs, rhs)) {
-            diffs.add(new DiffPair<>(join("-", rootName, path,fieldName), ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
+            diffs.add(new DiffPair<>(path, ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
         }
         return this;
     }
 
-    public DiffDetailBuilder<T> append(final String path, final String fieldName, final char[] lhs,
+    public DiffDetailBuilder<T> append(final String path,  final char[] lhs,
                                        final char[] rhs) {
-        validateFieldNameNotNull(fieldName);
+        validateFieldNameNotNull(path);
 
         if (!Arrays.equals(lhs, rhs)) {
-            diffs.add(new DiffPair<>(join("-", rootName, path,fieldName), ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
+            diffs.add(new DiffPair<>(path, ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
         }
         return this;
     }
 
-    public DiffDetailBuilder<T> append(final String path, final String fieldName, final int[] lhs,
+    public DiffDetailBuilder<T> append(final String path,  final int[] lhs,
                                        final int[] rhs) {
-        validateFieldNameNotNull(fieldName);
+        validateFieldNameNotNull(path);
 
         if (!Arrays.equals(lhs, rhs)) {
-            diffs.add(new DiffPair<>(join("-", rootName, path,fieldName), ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
+            diffs.add(new DiffPair<>(path, ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
         }
         return this;
     }
 
-    public DiffDetailBuilder<T> append(final String path, final String fieldName, final double[] lhs,
+    public DiffDetailBuilder<T> append(final String path,  final double[] lhs,
                                        final double[] rhs) {
-        validateFieldNameNotNull(fieldName);
+        validateFieldNameNotNull(path);
 
         if (!Arrays.equals(lhs, rhs)) {
-            diffs.add(new DiffPair<>(join("-", rootName, path,fieldName), ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
+            diffs.add(new DiffPair<>(path, ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
         }
         return this;
     }
 
-    public DiffDetailBuilder<T> append(final String path, final String fieldName, final float[] lhs,
+    public DiffDetailBuilder<T> append(final String path,  final float[] lhs,
                                        final float[] rhs) {
-        validateFieldNameNotNull(fieldName);
+        validateFieldNameNotNull(path);
 
         if (!Arrays.equals(lhs, rhs)) {
-            diffs.add(new DiffPair<>(join("-", rootName, path,fieldName), ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
+            diffs.add(new DiffPair<>(path, ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
         }
         return this;
     }
 
-    public DiffDetailBuilder<T> append(final String path, final String fieldName, final long[] lhs,
+    public DiffDetailBuilder<T> append(final String path,  final long[] lhs,
                                        final long[] rhs) {
-        validateFieldNameNotNull(fieldName);
+        validateFieldNameNotNull(path);
 
         if (!Arrays.equals(lhs, rhs)) {
-            diffs.add(new DiffPair<>(join("-", rootName, path,fieldName), ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
+            diffs.add(new DiffPair<>(path, ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
         }
         return this;
     }
 
-    public DiffDetailBuilder<T> append(final String path, final String fieldName, final Object[] lhs,
+    public DiffDetailBuilder<T> append(final String path,  final Object[] lhs,
                                        final Object[] rhs) {
-        validateFieldNameNotNull(fieldName);
+        validateFieldNameNotNull(path);
 
         if (!Arrays.equals(lhs, rhs)) {
-            diffs.add(new DiffPair<>(join("-", rootName, path,fieldName), lhs, rhs));
+            diffs.add(new DiffPair<>(path, lhs, rhs));
         }
         return this;
     }
 
-    public DiffDetailBuilder<T> append(final String path, final String fieldName, final short[] lhs,
+    public DiffDetailBuilder<T> append(final String path,  final short[] lhs,
                                        final short[] rhs) {
-        validateFieldNameNotNull(fieldName);
+        validateFieldNameNotNull(path);
 
         if (!Arrays.equals(lhs, rhs)) {
-            diffs.add(new DiffPair<>(join("-", rootName, path,fieldName), ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
+            diffs.add(new DiffPair<>(path, ArrayUtils.toObject(lhs), ArrayUtils.toObject(rhs)));
         }
         return this;
     }
